@@ -4,7 +4,7 @@ const textract = new AWS.Textract();
 const s3 = new AWS.S3();
 
 export const detectText = async (event) => {
-  // S3 のイベントからファイルの情報を取得
+  // S3 のイベントからオブジェクトの情報を取得
   const bucket = event.Records[0].s3.bucket.name;
   const objectKey = event.Records[0].s3.object.key;
 
@@ -27,17 +27,17 @@ export const detectText = async (event) => {
 
     // テキストを取得
     const text = await getTextractText(jobId);
+    console.log(text);
     
     // テキストを使用して必要な処理を行う
     const putparams = {
-      Bucket: '20230919-text-bucket',
+      Bucket: '20231113-text-bucket',
       Key: 'sample.txt',
       Body: text,
       ContentType: 'text/plain',
     };
 
     await s3.putObject(putparams).promise();
-    console.log("Text file uploaded successfully.");
 
     return {
       statusCode: 200,
@@ -51,22 +51,24 @@ export const detectText = async (event) => {
   }
 };
 
-// Textractのジョブが完了するのを待つユーティリティ関数
+// Textractのジョブが完了するのを待つ
 async function waitForJobCompletion(jobId) {
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-  let status = 'IN_PROGRESS';
 
-  while (status === 'IN_PROGRESS') {
+  while (true) {
     const response = await textract.getDocumentTextDetection({ JobId: jobId }).promise();
-    status = response.JobStatus;
 
-    if (status === 'IN_PROGRESS') {
-      await delay(5000); // 5秒待機
+    if (response.JobStatus === 'SUCCEEDED') {
+      break;
+    }
+
+    if (response.JobStatus === 'IN_PROGRESS') {
+      await delay(5000);
     }
   }
 }
 
-// Textractからテキストを取得するユーティリティ関数
+// Textractからテキストを取得
 async function getTextractText(jobId) {
   const response = await textract.getDocumentTextDetection({ JobId: jobId }).promise();
   const text = response.Blocks

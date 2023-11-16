@@ -5,7 +5,7 @@ frameworkVersion: "3"
 provider:
   name: aws
   runtime: nodejs18.x
-  region: us-west-2
+  region: us-west-1
   iam:
     role:
       statements:
@@ -13,8 +13,8 @@ provider:
           Action:
             - s3:*
           Resource:
-            - "arn:aws:s3:::20230919-image-bucket/*"
-            - "arn:aws:s3:::20230919-text-bucket/*"
+            - "arn:aws:s3:::20231113-image-bucket/*"
+            - "arn:aws:s3:::20231113-text-bucket/*"
         - Effect: Allow
           Action:
             - textract:StartDocumentTextDetection
@@ -25,10 +25,10 @@ provider:
 functions:
   detectText:
     handler: handler.detectText
-    timeout: 60
+    timeout: 120
     events:
       - s3:
-          bucket: 20230919-image-bucket
+          bucket: 20231113-image-bucket
           event: s3:ObjectCreated:*
           existing: true
     layers:
@@ -36,14 +36,14 @@ functions:
 
 resources:
   Resources:
-    20230919ImageBucket:
+    20231113ImageBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: 20230919-image-bucket
-    20230919TextBucket:
+        BucketName: 20231113-image-bucket
+    20231113TextBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: 20230919-text-bucket
+        BucketName: 20231113-text-bucket
 
 layers:
   awsLayer:
